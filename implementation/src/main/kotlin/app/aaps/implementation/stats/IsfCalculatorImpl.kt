@@ -89,8 +89,8 @@ class IsfCalculatorImpl @Inject constructor(
                         val tddWeightedFromLast8H = ((1.6 * tddLast4H) + (0.4 * tddLast8to4H)) * 3
 
                         var tdd =
-                            if ((tddWeightedFromLast8H < (0.20 * tdd7D)) && (tdd1D != null)) ((tddWeightedFromLast8H +( (tddWeightedFromLast8H / tdd7D) * ( tdd7D - tddWeightedFromLast8H))) * 0.34 )+ (tdd1D * 0.06) + (tddWeightedFromLast8H * 0.60)
-                            else if (tdd1D != null) (tddWeightedFromLast8H * 0.85) + (tdd7D * 0.10) + (tdd1D * 0.05)
+                            if ((tddWeightedFromLast8H < (0.20 * tdd7D)) && (tdd1D != null)) ((tddWeightedFromLast8H +( (tddWeightedFromLast8H / tdd7D) * ( tdd7D - tddWeightedFromLast8H))) * 0.45 )+ (tdd1D * 0.10) + (tddWeightedFromLast8H * 0.45)
+                            else if (tdd1D != null) (tddWeightedFromLast8H * 0.80) + (tdd7D * 0.05) + (tdd1D * 0.05) + (tddLast24H * 0.10)
                             else tddWeightedFromLast8H
 
                         jsLogger.debug("TDD: ${Round.roundTo(tdd, 0.01)}")

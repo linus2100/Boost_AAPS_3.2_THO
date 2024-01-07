@@ -86,11 +86,12 @@ class IsfCalculatorImpl @Inject constructor(
                         val tdd1D = tddCalculator.averageTDD(tddCalculator.calculate(1, false))?.totalAmount
                         val tddLast4H = tddCalculator.calculateDaily(-4, 0)?.totalAmount ?: 0.0
                         val tddLast8to4H = tddCalculator.calculateDaily(-8, -4)?.totalAmount ?: 0.0
-                        val tddWeightedFromLast8H = ((1.4 * tddLast4H) + (0.6 * tddLast8to4H)) * 3
+                        val tddWeightedFromLast8H = ((1.6 * tddLast4H) + (0.4 * tddLast8to4H)) * 3
+                        // val tddWeightedFromLast8H = ((1.4 * tddLast4H) + (0.6 * tddLast8to4H)) * 3
 
                         var tdd =
                             if ((tddWeightedFromLast8H < (0.20 * tdd7D)) && (tdd1D != null)) ((tddWeightedFromLast8H +( (tddWeightedFromLast8H / tdd7D) * ( tdd7D - tddWeightedFromLast8H))) * 0.45 )+ (tdd1D * 0.10) + (tddWeightedFromLast8H * 0.45)
-                            else if (tdd1D != null) (tddWeightedFromLast8H * 0.75) + (tdd7D * 0.05) + (tdd1D * 0.05) + (tddLast24H * 0.15)
+                            else if (tdd1D != null) (tddWeightedFromLast8H * 0.80) + (tdd7D * 0.05) + (tdd1D * 0.05) + (tddLast24H * 0.10)
                             else tddWeightedFromLast8H
 
                         jsLogger.debug("TDD: ${Round.roundTo(tdd, 0.01)}")

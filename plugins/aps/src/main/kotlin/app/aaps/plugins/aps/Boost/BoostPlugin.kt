@@ -17,6 +17,7 @@ import app.aaps.core.interfaces.profiling.Profiler
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.plugins.aps.openAPSSMB.OpenAPSSMBPlugin
@@ -44,7 +45,8 @@ class BoostPlugin @Inject constructor(
     dateUtil: DateUtil,
     repository: AppRepository,
     glucoseStatusProvider: GlucoseStatusProvider,
-    bgQualityCheck: BgQualityCheck
+    bgQualityCheck: BgQualityCheck,
+    tddCalculator: TddCalculator
 ) : OpenAPSSMBPlugin(
     injector,
     aapsLogger,
@@ -61,7 +63,8 @@ class BoostPlugin @Inject constructor(
     dateUtil,
     repository,
     glucoseStatusProvider,
-    bgQualityCheck
+    bgQualityCheck,
+    tddCalculator
 ), DynamicISFPlugin {
     init {
         pluginDescription

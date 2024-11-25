@@ -19,6 +19,17 @@
             android:key="@string/key_smscommunicator_remote_commands_allowed"
             android:title="@string/smscommunicator_remote_commands_allowed" />
 
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/key_smscommunicator_addpumpstatus"
+            android:title="@string/smscommunicator_addpumpstatus" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/key_smscommunicator_reporttoall"
+            android:title="@string/smscommunicator_reporttoall"
+            android:summary="@string/smscommunicator_reporttoall_summary"/>
+
         <app.aaps.core.validators.ValidatingEditTextPreference
             android:defaultValue="15"
             android:key="@string/key_smscommunicator_remote_bolus_min_distance"
@@ -27,6 +38,14 @@
             validate:maxNumber="60"
             validate:minNumber="3"
             validate:testType="numericRange" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:enabled="true"
+            android:key="@string/key_smscommunicator_otp_enabled"
+            android:summary="@string/smscommunicator_otp_enabled_summary"
+            android:title="@string/smscommunicator_otp_enabled"
+            app:isPreferenceVisible="true" />
 
         <app.aaps.core.validators.ValidatingEditTextPreference
             android:dependency="@string/key_smscommunicator_remote_commands_allowed"

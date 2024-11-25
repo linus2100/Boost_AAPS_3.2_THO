@@ -10,6 +10,7 @@ import app.aaps.core.interfaces.iob.IobTotal
 import app.aaps.core.interfaces.iob.MealData
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.logging.ScriptLogger
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -18,6 +19,7 @@ import app.aaps.core.interfaces.utils.SafeParse
 import app.aaps.core.main.extensions.convertedToAbsolute
 import app.aaps.core.main.extensions.getPassedDurationToTimeInMinutes
 import app.aaps.core.main.extensions.plannedRemainingMinutes
+import app.aaps.core.validators.LoopVariantPreference
 import app.aaps.plugins.aps.APSResultObject
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.logger.LoggerCallback
@@ -39,7 +41,7 @@ import java.lang.reflect.InvocationTargetException
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
-class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: ScriptReader, private val injector: HasAndroidInjector) : DetermineBasalAdapter {
+open class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: ScriptReader, private val injector: HasAndroidInjector) : DetermineBasalAdapter {
 
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var constraintChecker: ConstraintsChecker
@@ -48,16 +50,16 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
     @Inject lateinit var iobCobCalculator: IobCobCalculator
     @Inject lateinit var activePlugin: ActivePlugin
 
-    private var profile = JSONObject()
-    private var mGlucoseStatus = JSONObject()
-    private var iobData: JSONArray? = null
-    private var mealData = JSONObject()
-    private var currentTemp = JSONObject()
-    private var autosensData = JSONObject()
-    private var microBolusAllowed = false
-    private var smbAlwaysAllowed = false
-    private var currentTime: Long = 0
-    private var flatBGsDetected = false
+    protected var profile = JSONObject()
+    protected var mGlucoseStatus = JSONObject()
+    protected var iobData: JSONArray? = null
+    protected var mealData = JSONObject()
+    protected var currentTemp = JSONObject()
+    protected var autosensData = JSONObject()
+    protected var microBolusAllowed = false
+    protected var smbAlwaysAllowed = false
+    protected var currentTime: Long = 0
+    protected var flatBGsDetected = false
 
     override var currentTempParam: String? = null
     override var iobDataParam: String? = null
@@ -65,6 +67,10 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
     override var profileParam: String? = null
     override var mealDataParam: String? = null
     override var scriptDebug = ""
+
+    protected open val jsFolder = "OpenAPSSMB"
+    protected open val useLoopVariants = false
+    protected open val jsAdditionalScript = ""
 
     @Suppress("SpellCheckingInspection")
     override operator fun invoke(): APSResultObject? {
@@ -98,8 +104,17 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
             rhino.evaluateString(scope, "var round_basal = function round_basal(basal, profile) { return basal; };", "JavaScript", 0, null)
             rhino.evaluateString(scope, "require = function() {return round_basal;};", "JavaScript", 0, null)
 
+            if (jsAdditionalScript != "") {
+                rhino.evaluateString(scope, jsAdditionalScript, "JavaScript", 0, null)
+            }
             //generate functions "determine_basal" and "setTempBasal"
-            rhino.evaluateString(scope, readFile("OpenAPSSMB/determine-basal.js"), "JavaScript", 0, null)
+            if (useLoopVariants) {
+                rhino.evaluateString(scope, readFile(LoopVariantPreference.getVariantFileName(sp, jsFolder)), "JavaScript", 0, null)
+                this.profile.put("variant", LoopVariantPreference.getVariant(sp, jsFolder));
+            }
+            else {
+                rhino.evaluateString(scope, readFile("$jsFolder/determine-basal.js"), "JavaScript", 0, null)
+            }
             rhino.evaluateString(scope, readFile("OpenAPSSMB/basal-set-temp.js"), "setTempBasal.js", 0, null)
             val determineBasalObj = scope["determine_basal", scope]
             val setTempBasalFunctionsObj = scope["tempBasalFunctions", scope]
@@ -122,7 +137,7 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
                     java.lang.Boolean.valueOf(flatBGsDetected)
                 )
                 val jsResult = determineBasalObj.call(rhino, scope, scope, params) as NativeObject
-                scriptDebug = LoggerCallback.scriptDebug
+                scriptDebug = ScriptLogger.dump()
 
                 // Parse the jsResult object to a JSON-String
                 val result = NativeJSON.stringify(rhino, scope, jsResult, null, null).toString()
@@ -137,7 +152,7 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
                 aapsLogger.error(LTag.APS, "Problem loading JS Functions")
             }
         } catch (e: IOException) {
-            aapsLogger.error(LTag.APS, "IOException")
+            aapsLogger.error(LTag.APS, "IOException: $e")
         } catch (e: RhinoException) {
             aapsLogger.error(LTag.APS, "RhinoException: (" + e.lineNumber() + "," + e.columnNumber() + ") " + e.toString())
         } catch (e: IllegalAccessException) {
@@ -174,12 +189,7 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
         microBolusAllowed: Boolean,
         uamAllowed: Boolean,
         advancedFiltering: Boolean,
-        flatBGsDetected: Boolean,
-        tdd1D: Double?,
-        tdd7D: Double?,
-        tddLast24H: Double?,
-        tddLast4H: Double?,
-        tddLast8to4H: Double?
+        flatBGsDetected: Boolean
     ) {
         val pump = activePlugin.activePump
         val pumpBolusStep = pump.pumpDescription.bolusStep
@@ -196,15 +206,16 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
         this.profile.put("max_daily_safety_multiplier", sp.getInt(R.string.key_openapsama_max_daily_safety_multiplier, 3))
         this.profile.put("current_basal_safety_multiplier", sp.getDouble(R.string.key_openapsama_current_basal_safety_multiplier, 4.0))
 
-        //mProfile.put("high_temptarget_raises_sensitivity", SP.getBoolean(R.string.key_high_temptarget_raises_sensitivity, SMBDefaults.high_temptarget_raises_sensitivity));
-        this.profile.put("high_temptarget_raises_sensitivity", false)
-        //mProfile.put("low_temptarget_lowers_sensitivity", SP.getBoolean(R.string.key_low_temptarget_lowers_sensitivity, SMBDefaults.low_temptarget_lowers_sensitivity));
-        this.profile.put("low_temptarget_lowers_sensitivity", false)
+        // mod 10: include SMB manipulations to be accessible in determine-basal
+        this.profile.put("smb_delivery_ratio", SafeParse.stringToDouble(sp.getString(R.string.key_openapsama_smb_delivery_ratio, "0.5")))
+        this.profile.put("smb_delivery_ratio_min", SafeParse.stringToDouble(sp.getString(R.string.key_openapsama_smb_delivery_ratio_min, "0.5")))
+        this.profile.put("smb_delivery_ratio_max", SafeParse.stringToDouble(sp.getString(R.string.key_openapsama_smb_delivery_ratio_max, "0.5")))
+        this.profile.put("smb_delivery_ratio_bg_range", SafeParse.stringToDouble(sp.getString(R.string.key_openapsama_smb_delivery_ratio_bg_range, "0")))
+        this.profile.put("high_temptarget_raises_sensitivity", sp.getBoolean(R.string.key_high_temptarget_raises_sensitivity, SMBDefaults.high_temptarget_raises_sensitivity));
+        this.profile.put("low_temptarget_lowers_sensitivity", sp.getBoolean(R.string.key_low_temptarget_lowers_sensitivity, SMBDefaults.low_temptarget_lowers_sensitivity));
         this.profile.put("sensitivity_raises_target", sp.getBoolean(R.string.key_sensitivity_raises_target, SMBDefaults.sensitivity_raises_target))
         this.profile.put("resistance_lowers_target", sp.getBoolean(R.string.key_resistance_lowers_target, SMBDefaults.resistance_lowers_target))
         this.profile.put("adv_target_adjustments", SMBDefaults.adv_target_adjustments)
-        this.profile.put("exercise_mode", SMBDefaults.exercise_mode)
-        this.profile.put("half_basal_exercise_target", SMBDefaults.half_basal_exercise_target)
         this.profile.put("maxCOB", SMBDefaults.maxCOB)
         this.profile.put("skip_neutral_temps", pump.setNeutralTempAtFullHour())
         // min_5m_carbimpact is not used within SMB determinebasal
@@ -221,8 +232,8 @@ class DetermineBasalAdapterSMBJS internal constructor(private val scriptReader: 
         this.profile.put("enableSMB_with_COB", smbEnabled && sp.getBoolean(R.string.key_enableSMB_with_COB, false))
         this.profile.put("enableSMB_with_temptarget", smbEnabled && sp.getBoolean(R.string.key_enableSMB_with_temptarget, false))
         this.profile.put("allowSMB_with_high_temptarget", smbEnabled && sp.getBoolean(R.string.key_allowSMB_with_high_temptarget, false))
-        this.profile.put("enableSMB_always", smbEnabled && sp.getBoolean(R.string.key_enableSMB_always, false) && advancedFiltering)
-        this.profile.put("enableSMB_after_carbs", smbEnabled && sp.getBoolean(R.string.key_enableSMB_after_carbs, false) && advancedFiltering)
+        this.profile.put("enableSMB_always", smbEnabled && sp.getBoolean(R.string.key_enableSMB_always, false))
+        this.profile.put("enableSMB_after_carbs", smbEnabled && sp.getBoolean(R.string.key_enableSMB_after_carbs, false))
         this.profile.put("maxSMBBasalMinutes", sp.getInt(R.string.key_smb_max_minutes, SMBDefaults.maxSMBBasalMinutes))
         this.profile.put("maxUAMSMBBasalMinutes", sp.getInt(R.string.key_uam_smb_max_minutes, SMBDefaults.maxUAMSMBBasalMinutes))
         //set the min SMB amount to be the amount set by the pump.

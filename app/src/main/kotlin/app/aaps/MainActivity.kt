@@ -124,6 +124,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
             it.syncState()
         }
 
+
         // initialize screen wake lock
         processPreferenceChange(EventPreferenceChange(rh.gs(app.aaps.plugins.main.R.string.key_keep_screen_on)))
         binding.mainPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {

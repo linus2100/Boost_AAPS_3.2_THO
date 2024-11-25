@@ -9,6 +9,7 @@
     <string name="key_danar_useextended" translatable="false">danar_useextended</string>
     <string name="key_eatingsoon_duration" translatable="false">eatingsoon_duration</string>
     <string name="key_eatingsoon_target" translatable="false">eatingsoon_target</string>
+    <string name="key_eatingnow_duration" translatable="false">eatingnow_duration</string>
     <string name="key_activity_duration" translatable="false">activity_duration</string>
     <string name="key_activity_target" translatable="false">activity_target</string>
     <string name="key_hypo_duration" translatable="false">hypo_duration</string>
@@ -37,7 +38,17 @@
     <string name="key_smscommunicator_settings" translatable="false">smscommunicator_settings</string>
     <string name="key_openapssmb_settings" translatable="false">openapssmb_settings</string>
     <string name="key_treatmentssafety_settings" translatable="false">treatmentssafety_settings</string>
+    <!-- Night mode -->
+    <string name="key_treatment_safety_night_mode_enabled" translatable="false">treatment_safety_night_mode_enabled</string>
+    <string name="key_treatment_safety_night_mode_bg_offset" translatable="false">treatment_safety_night_mode_bg_offset</string>
+    <string name="key_treatment_safety_night_mode_start" translatable="false">treatment_safety_night_mode_start</string>
+    <string name="key_treatment_safety_night_mode_end" translatable="false">treatment_safety_night_mode_end</string>
+    <string name="key_treatment_safety_night_mode_disable_with_cob" translatable="false">treatment_safety_night_mode_disable_with_cob</string>
+    <string name="key_treatment_safety_night_mode_disable_with_low_temp_target" translatable="false">treatment_safety_night_mode_disable_with_low_temp_target</string>
+
+    <!-- /Night mode -->
     <string name="key_loop_settings" translatable="false">loop_settings</string>
+    <string name="key_loop_swap_smbtbr_order" translatable="false">loop_swap_smbtbr_order</string>
     <string name="key_virtualpump_settings" translatable="false">virtualpump_settings</string>
     <string name="key_pump_settings" translatable="false">pump_settings</string>
     <string name="key_tidepool_settings" translatable="false">tidepool_settings</string>
@@ -80,6 +91,7 @@
     <string name="key_enable_carbs_required_alert_local" translatable="false">enable_carbs_required_alert_local</string>
     <string name="key_smscommunicator_report_pump_unreachable" translatable="false">smscommunicator_report_pump_unreachable</string>
     <string name="key_rangetodisplay" translatable="false">rangetodisplay</string>
+    <string name="key_show_tbr_as_percent" translatable="false">show_tbr_as_percent</string>
     <string name="key_local_profile_last_change" translatable="false">local_profile_last_change</string>
     <string name="key_ns_receive_profile_store" translatable="false">ns_receive_profile_store</string>
     <string name="key_nsclientinternal_url" translatable="false">nsclientinternal_url</string>
@@ -155,6 +167,16 @@
     <string name="key_virtual_pump_upload_status" translatable="false">virtualpump_uploadstatus</string>
     <string name="key_use_autosens" translatable="false">openapsama_useautosens</string>
     <string name="key_used_autosens_on_main_phone" translatable="false">used_autosens_on_main_phone</string>
+    <string name="key_Boost_settings" translatable="false">Boost_settings</string>
+    <string name="key_engineering_mode" translatable="false">engineering_mode</string>
     <string name="key_openapsma_max_basal" translatable="false">openapsma_max_basal</string>
 
+    <string name="key_dynamic_isf_enable" translatable="false">dynamic_isf_enable</string>
+    <string name="key_dynamic_isf_use_tdd" translatable="false">dynamic_isf_use_tdd</string>
+    <string name="key_dynamic_isf_tdd_adjust" translatable="false">dynamic_isf_tdd_adjust</string>
+    <string name="key_dynamic_isf_velocity" translatable="false">dynamic_isf_velocity</string>
+    <string name="key_dynamic_isf_bg_cap" translatable="false">dynamic_isf_bg_cap</string>
+    <string name="key_dynamic_isf_obey_profile" translatable="false">dynamic_isf_obey_profile</string>
+    <string name="key_dynamic_isf_adjust_sensitivity" translatable="false">dynisf_adjust_sensitivity</string>
+    <string name="key_dynamic_isf_normalTarget" translatable="false">dynamic_isf_normalTarget</string>
 </resources>

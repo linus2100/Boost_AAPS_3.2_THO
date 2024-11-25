@@ -6,6 +6,8 @@ import app.aaps.plugins.aps.loop.LoopPlugin
 import app.aaps.plugins.aps.openAPSAMA.OpenAPSAMAPlugin
 import app.aaps.plugins.aps.openAPSSMB.OpenAPSSMBPlugin
 import app.aaps.plugins.aps.openAPSSMBDynamicISF.OpenAPSSMBDynamicISFPlugin
+import app.aaps.plugins.aps.Boost.BoostPlugin
+//import app.aaps.plugins.aps.EN.ENPlugin
 import app.aaps.plugins.automation.AutomationPlugin
 import app.aaps.plugins.configuration.configBuilder.ConfigBuilderPlugin
 import app.aaps.plugins.configuration.maintenance.MaintenancePlugin
@@ -17,6 +19,8 @@ import app.aaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin
 import app.aaps.plugins.constraints.storage.StorageConstraintPlugin
 import app.aaps.plugins.constraints.versionChecker.VersionCheckerPlugin
 import app.aaps.plugins.insulin.InsulinLyumjevPlugin
+import app.aaps.plugins.insulin.InsulinLyumjevU100PDPlugin
+import app.aaps.plugins.insulin.InsulinLyumjevU200PDPlugin
 import app.aaps.plugins.insulin.InsulinOrefFreePeakPlugin
 import app.aaps.plugins.insulin.InsulinOrefRapidActingPlugin
 import app.aaps.plugins.insulin.InsulinOrefUltraRapidActingPlugin
@@ -116,6 +120,18 @@ abstract class PluginsListModule {
     @AllConfigs
     @IntoMap
     @IntKey(42)
+    abstract fun bindInsulinLyumjevU100PDPlugin(plugin: InsulinLyumjevU100PDPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(44)
+    abstract fun bindInsulinLyumjevU200PDPlugin(plugin: InsulinLyumjevU200PDPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(46)
     abstract fun bindInsulinLyumjevPlugin(plugin: InsulinLyumjevPlugin): PluginBase
 
     @Binds
@@ -247,7 +263,13 @@ abstract class PluginsListModule {
     @Binds
     @APS
     @IntoMap
-    @IntKey(222)
+    @IntKey(224)
+    abstract fun bindOpenAPSBoostPlugin(plugin: BoostPlugin): PluginBase
+
+    @Binds
+    @APS
+    @IntoMap
+    @IntKey(228)
     abstract fun bindOpenAPSSMBAutoISFPlugin(plugin: OpenAPSSMBDynamicISFPlugin): PluginBase
 
     @Binds

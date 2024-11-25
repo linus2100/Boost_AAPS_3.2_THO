@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.android.ContributesAndroidInjector
 import app.aaps.core.validators.DefaultEditTextValidator
 import app.aaps.core.validators.EditTextValidator
+import app.aaps.core.validators.LoopVariantPreference
 import app.aaps.core.validators.ValidatingEditTextPreference
 
 @Module
@@ -13,4 +14,5 @@ abstract class ValidatorsModule {
     @ContributesAndroidInjector abstract fun defaultEditTextValidatorInjector(): DefaultEditTextValidator
     @ContributesAndroidInjector abstract fun editTextValidatorInjector(): EditTextValidator
     @ContributesAndroidInjector abstract fun validatingEditTextPreferenceInjector(): ValidatingEditTextPreference
+    @ContributesAndroidInjector abstract fun loopVariantPreferenceInjector(): LoopVariantPreference
 }

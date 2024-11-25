@@ -82,9 +82,6 @@ class OpenAPSSMBDynamicISFPlugin @Inject constructor(
             .setDefault(false)
     }
 
-    override fun specialEnableCondition(): Boolean =
-        objectives.isStarted(Objectives.DYN_ISF_OBJECTIVE)
-
     // If there is no TDD data fallback to SMB as ISF calculation may be really off
     override fun provideDetermineBasalAdapter(): DetermineBasalAdapter =
         if (tdd1D == null || tdd7D == null || tddLast4H == null || tddLast8to4H == null || tddLast24H == null || !dynIsfEnabled.value()) {

@@ -24,6 +24,11 @@
                 android:title="@string/treatments" />
 
             <SwitchPreference
+                android:defaultValue="false"
+                android:key="@string/key_eatingnow_showbutton"
+                android:title="@string/en_eatingnow_showbutton" />
+
+            <SwitchPreference
                 android:defaultValue="true"
                 android:key="@string/key_show_wizard_button"
                 android:title="@string/calculator_label" />
@@ -259,6 +264,11 @@
                 validate:testType="floatNumericRange" />
 
         </androidx.preference.PreferenceScreen>
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/key_show_tbr_as_percent"
+            android:title="@string/show_tbr_as_percent" />
 
         <SwitchPreference
             android:defaultValue="false"

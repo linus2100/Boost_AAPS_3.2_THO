@@ -28,6 +28,7 @@ import app.aaps.ui.dialogs.BolusProgressDialog
 import app.aaps.ui.dialogs.CalibrationDialog
 import app.aaps.ui.dialogs.CarbsDialog
 import app.aaps.ui.dialogs.CareDialog
+import app.aaps.ui.dialogs.ENTempTargetDialog
 import app.aaps.ui.dialogs.ExtendedBolusDialog
 import app.aaps.ui.dialogs.FillDialog
 import app.aaps.ui.dialogs.InsulinDialog
@@ -125,6 +126,11 @@ class UiInteractionImpl @Inject constructor(
     override fun runTempTargetDialog(fragmentManager: FragmentManager) {
         TempTargetDialog()
             .show(fragmentManager, "TempTargetDialog")
+    }
+
+    override fun runENTempTargetDialog(fragmentManager: FragmentManager) {
+        ENTempTargetDialog()
+            .show(fragmentManager, "ENTempTargetDialog")
     }
 
     override fun runExtendedBolusDialog(fragmentManager: FragmentManager) {

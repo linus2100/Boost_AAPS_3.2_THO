@@ -89,6 +89,7 @@ import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.core.ui.elements.SingleClickButton
 import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.core.utils.JsonHelper
+import app.aaps.database.entities.TemporaryTarget
 import app.aaps.database.entities.UserEntry.Action
 import app.aaps.database.entities.UserEntry.Sources
 import app.aaps.database.entities.interfaces.end
@@ -228,6 +229,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         binding.buttonsLayout.cgmButton.setOnClickListener(this)
         binding.buttonsLayout.insulinButton.setOnClickListener(this)
         binding.buttonsLayout.carbsButton.setOnClickListener(this)
+        binding.buttonsLayout.enButton.setOnClickListener(this)
         binding.buttonsLayout.quickWizardButton.setOnClickListener(this)
         binding.buttonsLayout.quickWizardButton.setOnLongClickListener(this)
         binding.infoLayout.apsMode.setOnClickListener(this)
@@ -391,6 +393,11 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                     activity,
                     ProtectionCheck.Protection.BOLUS,
                     UIRunnable { if (isAdded) uiInteraction.runCarbsDialog(childFragmentManager) })
+
+                R.id.en_button        -> protectionCheck.queryProtection(
+                    activity,
+                    ProtectionCheck.Protection.BOLUS,
+                    UIRunnable { if (isAdded) uiInteraction.runENTempTargetDialog(childFragmentManager) })
 
                 R.id.temp_target         -> protectionCheck.queryProtection(
                     activity,
@@ -581,6 +588,8 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                 && sp.getBoolean(R.string.key_show_wizard_button, true)).toVisibility()
             binding.buttonsLayout.insulinButton.visibility = (!loop.isDisconnected && pump.isInitialized() && !pump.isSuspended() && profile != null
                 && sp.getBoolean(R.string.key_show_insulin_button, true)).toVisibility()
+            binding.buttonsLayout.enButton.visibility = (!loop.isDisconnected && pump.isInitialized() && !pump.isSuspended() && profile != null
+                && sp.getBoolean(R.string.key_eatingnow_showbutton, true)).toVisibility()
 
             // **** Calibration & CGM buttons ****
             val xDripIsBgSource = xDripSource.isEnabled()
@@ -955,6 +964,8 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     fun updateTemporaryTarget() {
         val units = profileFunction.getUnits()
         val tempTarget = overviewData.temporaryTarget
+        val ENTTtext = if (tempTarget?.reason == TemporaryTarget.Reason.EATING_NOW) "EATING NOW " else ""
+
         runOnUiThread {
             _binding ?: return@runOnUiThread
             if (tempTarget != null) {
@@ -962,7 +973,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                     binding.tempTarget,
                     app.aaps.core.ui.R.attr.ribbonTextWarningColor,
                     app.aaps.core.ui.R.attr.ribbonWarningColor,
-                    profileUtil.toTargetRangeString(tempTarget.lowTarget, tempTarget.highTarget, GlucoseUnit.MGDL, units) + " " + dateUtil.untilString(tempTarget.end, rh)
+                    ENTTtext + profileUtil.toTargetRangeString(tempTarget.lowTarget, tempTarget.highTarget, GlucoseUnit.MGDL, units) + " " + dateUtil.untilString(tempTarget.end, rh)
                 )
             } else {
                 profileFunction.getProfile()?.let { profile ->
@@ -1099,17 +1110,18 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         _binding ?: return
         val lastAutosensData = overviewData.lastAutosensData(iobCobCalculator)
         if (config.NSCLIENT && sp.getBoolean(app.aaps.core.utils.R.string.key_used_autosens_on_main_phone, false) ||
-            !config.NSCLIENT && constraintChecker.isAutosensModeEnabled().value()
-        ) {
+            !config.NSCLIENT && constraintChecker.isAutosensModeEnabled().value()) {
             binding.infoLayout.sensitivityIcon.setImageResource(app.aaps.core.main.R.drawable.ic_swap_vert_black_48dp_green)
+            binding.infoLayout.sensitivity.visibility = View.VISIBLE
+            binding.infoLayout.sensitivity.text =
+                lastAutosensData?.let {
+                    String.format(Locale.ENGLISH, "%.0f%%", it.autosensResult.ratio * 100)
+                } ?: ""
         } else {
             binding.infoLayout.sensitivityIcon.setImageResource(app.aaps.core.main.R.drawable.ic_x_swap_vert)
+            binding.infoLayout.sensitivity.visibility = View.GONE
         }
 
-        binding.infoLayout.sensitivity.text =
-            lastAutosensData?.let {
-                String.format(Locale.ENGLISH, "%.0f%%", it.autosensResult.ratio * 100)
-            } ?: ""
         // Show variable sensitivity
         val profile = profileFunction.getProfile()
         val request = loop.lastRun?.request

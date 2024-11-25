@@ -257,11 +257,13 @@
         tools:ignore="UseCompoundDrawables">
 
         <ImageView
+            android:id="@+id/overview_insulin_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            app:srcCompat="@drawable/ic_bolus"
-            android:contentDescription="@string/iob" />
+            android:contentDescription="@string/iob"
+            android:background="@drawable/anim_insulin"/>
+
 
         <TextView
             android:id="@+id/iob"
@@ -389,6 +391,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="9dp"
             app:srcCompat="@drawable/ic_swap_vert_black_48dp_green"
             android:contentDescription="@string/a11y_autosens_label" />
 
@@ -399,6 +402,7 @@
             android:gravity="center_horizontal"
             android:paddingTop="3dp"
             android:paddingBottom="3dp"
+            android:layout_marginTop="-9dp"
             tools:text="n/a"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textStyle="bold"
@@ -408,8 +412,9 @@
             android:id="@+id/variable_sensitivity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="-9dp"
             android:gravity="center_horizontal"
+            android:layout_marginTop="-9dp"
+            android:paddingTop="3dp"
             android:paddingBottom="3dp"
             tools:text="n/a"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"

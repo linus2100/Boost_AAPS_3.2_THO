@@ -28,7 +28,6 @@ import app.aaps.core.interfaces.profiling.Profiler
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.sharedPreferences.SP
-import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.MidnightTime
@@ -54,21 +53,20 @@ import kotlin.math.floor
 open class OpenAPSSMBPlugin @Inject constructor(
     injector: HasAndroidInjector,
     aapsLogger: AAPSLogger,
-    private val rxBus: RxBus,
-    private val constraintChecker: ConstraintsChecker,
+    protected val rxBus: RxBus,
+    protected val constraintChecker: ConstraintsChecker,
     rh: ResourceHelper,
-    private val profileFunction: ProfileFunction,
+    protected val profileFunction: ProfileFunction,
     val context: Context,
-    private val activePlugin: ActivePlugin,
-    private val iobCobCalculator: IobCobCalculator,
-    private val hardLimits: HardLimits,
-    private val profiler: Profiler,
-    private val sp: SP,
+    protected val activePlugin: ActivePlugin,
+    protected val iobCobCalculator: IobCobCalculator,
+    protected val hardLimits: HardLimits,
+    protected val profiler: Profiler,
+    protected val sp: SP,
     protected val dateUtil: DateUtil,
-    private val repository: AppRepository,
-    private val glucoseStatusProvider: GlucoseStatusProvider,
-    private val bgQualityCheck: BgQualityCheck,
-    private val tddCalculator: TddCalculator
+    protected val repository: AppRepository,
+    protected val glucoseStatusProvider: GlucoseStatusProvider,
+    protected val bgQualityCheck: BgQualityCheck,
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -82,12 +80,6 @@ open class OpenAPSSMBPlugin @Inject constructor(
     aapsLogger, rh, injector
 ), APS, PluginConstraints {
 
-    // DynamicISF specific
-    var tdd1D: Double? = null
-    var tdd7D: Double? = null
-    var tddLast24H: Double? = null
-    var tddLast4H: Double? = null
-    var tddLast8to4H: Double? = null
     var dynIsfEnabled: Constraint<Boolean> = ConstraintObject(false, aapsLogger)
 
     // last values
@@ -149,8 +141,9 @@ open class OpenAPSSMBPlugin @Inject constructor(
     override fun invoke(initiator: String, tempBasalFallback: Boolean) {
         aapsLogger.debug(LTag.APS, "invoke from $initiator tempBasalFallback: $tempBasalFallback")
         lastAPSResult = null
-        val glucoseStatus = glucoseStatusProvider.glucoseStatusData
-        val profile = profileFunction.getProfile()
+        val profile = verifyProfileLoaded()
+        val glucoseStatus = verifyGlucoseStatusLoaded()
+        val mealData = verifyMealDataLoaded()
         val pump = activePlugin.activePump
         if (profile == null) {
             rxBus.send(EventResetOpenAPSGui(rh.gs(app.aaps.core.ui.R.string.no_profile_set)))
@@ -269,45 +262,19 @@ open class OpenAPSSMBPlugin @Inject constructor(
         profiler.log(LTag.APS, "SMB data gathering", start)
         start = System.currentTimeMillis()
 
-        // DynamicISF specific
-        // without these values DynISF doesn't work properly
-        // Current implementation is fallback to SMB if TDD history is not available. Thus calculated here
-        tdd1D = tddCalculator.averageTDD(tddCalculator.calculate(1, allowMissingDays = false))?.totalAmount
-        tdd7D = tddCalculator.averageTDD(tddCalculator.calculate(7, allowMissingDays = false))?.totalAmount
-        tddLast24H = tddCalculator.calculateDaily(-24, 0)?.totalAmount
-        tddLast4H = tddCalculator.calculateDaily(-4, 0)?.totalAmount
-        tddLast8to4H = tddCalculator.calculateDaily(-8, -4)?.totalAmount
-
-        if (tdd1D == null || tdd7D == null || tddLast4H == null || tddLast8to4H == null || tddLast24H == null) {
-            inputConstraints.copyReasons(
-                ConstraintObject(false, aapsLogger).also {
-                    it.set(false, rh.gs(R.string.fallback_smb_no_tdd), this)
-                }
-            )
-            inputConstraints.copyReasons(
-                ConstraintObject(false, aapsLogger).apply { set(true, "tdd1D=$tdd1D tdd7D=$tdd7D tddLast4H=$tddLast4H tddLast8to4H=$tddLast8to4H tddLast24H=$tddLast24H", this) }
-            )
-        }
-
-
         provideDetermineBasalAdapter().also { determineBasalAdapterSMBJS ->
             determineBasalAdapterSMBJS.setData(
                 profile, maxIob, maxBasal, minBg, maxBg, targetBg,
                 activePlugin.activePump.baseBasalRate,
                 iobArray,
                 glucoseStatus,
-                iobCobCalculator.getMealDataWithWaitingForCalculationFinish(),
+                mealData,
                 lastAutosensResult.ratio,
                 isTempTarget,
                 smbAllowed.value(),
                 uam.value(),
                 advancedFiltering.value(),
-                flatBGsDetected,
-                tdd1D = tdd1D,
-                tdd7D = tdd7D,
-                tddLast24H = tddLast24H,
-                tddLast4H = tddLast4H,
-                tddLast8to4H = tddLast8to4H
+                flatBGsDetected
             )
             val now = System.currentTimeMillis()
             val determineBasalResultSMB = determineBasalAdapterSMBJS.invoke()
@@ -331,6 +298,7 @@ open class OpenAPSSMBPlugin @Inject constructor(
             }
         }
         rxBus.send(EventOpenAPSUpdateGui())
+        cleanShared()
     }
 
     override fun isSuperBolusEnabled(value: Constraint<Boolean>): Constraint<Boolean> {
@@ -349,7 +317,7 @@ open class OpenAPSSMBPlugin @Inject constructor(
 
     override fun applyBasalConstraints(absoluteRate: Constraint<Double>, profile: Profile): Constraint<Double> {
         if (isEnabled()) {
-            var maxBasal = sp.getDouble(app.aaps.core.utils.R.string.key_openapsma_max_basal, 1.0)
+            var maxBasal = sp.getDouble(R.string.key_openapsma_max_basal, 1.0)
             if (maxBasal < profile.getMaxDailyBasal()) {
                 maxBasal = profile.getMaxDailyBasal()
                 absoluteRate.addReason(rh.gs(R.string.increasing_max_basal), this)

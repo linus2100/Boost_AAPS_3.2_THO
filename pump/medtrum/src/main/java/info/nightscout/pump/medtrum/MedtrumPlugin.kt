@@ -53,6 +53,7 @@ import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.core.validators.ValidatingEditTextPreference
 import dagger.android.HasAndroidInjector
 import info.nightscout.pump.medtrum.comm.enums.MedtrumPumpState
+import info.nightscout.pump.medtrum.comm.enums.ModelType
 import info.nightscout.pump.medtrum.services.MedtrumService
 import info.nightscout.pump.medtrum.ui.MedtrumOverviewFragment
 import info.nightscout.pump.medtrum.util.MedtrumSnUtil
@@ -153,7 +154,7 @@ import kotlin.math.abs
                     override fun afterTextChanged(newValue: Editable?) {
                         val newSN = newValue?.toString()?.toLongOrNull(radix = 16) ?: 0
                         val newDeviceType = MedtrumSnUtil().getDeviceTypeFromSerial(newSN)
-                        editText.error = if (newDeviceType == MedtrumSnUtil.INVALID) {
+                        editText.error = if (newDeviceType == ModelType.INVALID) {
                             rh.gs(R.string.sn_input_invalid)
                         } else {
                             null
@@ -174,7 +175,7 @@ import kotlin.math.abs
                 val newDeviceType = MedtrumSnUtil().getDeviceTypeFromSerial(newSN)
 
                 when {
-                    newDeviceType == MedtrumSnUtil.INVALID                           -> {
+                    newDeviceType == ModelType.INVALID                           -> {
                         preferenceFragment.activity?.let { activity ->
                             OKDialog.show(activity, rh.gs(R.string.sn_input_title), rh.gs(R.string.sn_input_invalid))
                         }
@@ -183,7 +184,7 @@ import kotlin.math.abs
 
                     medtrumPump.pumpType(newDeviceType) == PumpType.MEDTRUM_UNTESTED -> {
                         preferenceFragment.activity?.let { activity ->
-                            OKDialog.show(activity, rh.gs(R.string.sn_input_title), rh.gs(R.string.pump_unsupported, newDeviceType))
+                            OKDialog.show(activity, rh.gs(R.string.sn_input_title), rh.gs(R.string.pump_unsupported, newDeviceType.toString()))
                         }
                         false
                     }
@@ -268,7 +269,7 @@ import kotlin.math.abs
         val patchExpirationPref = preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_patch_expiration))
         val pumpWarningNotificationPref = preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_pump_warning_notification))
         val pumpWarningExpiryHourPref = preferenceFragment.findPreference<ValidatingEditTextPreference>(rh.gs(R.string.key_pump_warning_expiry_hour))
-        
+
         pumpWarningExpiryHourPref?.isEnabled = patchExpirationPref?.isChecked == true && pumpWarningNotificationPref?.isChecked == true
     }
 
@@ -377,33 +378,27 @@ import kotlin.math.abs
 
     @Synchronized
     override fun deliverTreatment(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult {
+        // Insulin value must be greater than 0
+        require(detailedBolusInfo.carbs == 0.0) { detailedBolusInfo.toString() }
+        require(detailedBolusInfo.insulin > 0) { detailedBolusInfo.toString() }
+
         aapsLogger.debug(LTag.PUMP, "deliverTreatment: " + detailedBolusInfo.insulin + "U")
         if (!isInitialized()) return PumpEnactResult(injector).success(false).enacted(false)
         detailedBolusInfo.insulin = constraintChecker.applyBolusConstraints(ConstraintObject(detailedBolusInfo.insulin, aapsLogger)).value()
-        return if (detailedBolusInfo.insulin > 0 && detailedBolusInfo.carbs == 0.0) {
-            aapsLogger.debug(LTag.PUMP, "deliverTreatment: Delivering bolus: " + detailedBolusInfo.insulin + "U")
-            val t = EventOverviewBolusProgress.Treatment(0.0, 0, detailedBolusInfo.bolusType == DetailedBolusInfo.BolusType.SMB, detailedBolusInfo.id)
-            val connectionOK = medtrumService?.setBolus(detailedBolusInfo, t) ?: false
-            val result = PumpEnactResult(injector)
-            result.success = connectionOK && abs(detailedBolusInfo.insulin - t.insulin) < pumpDescription.bolusStep
-            result.bolusDelivered = t.insulin
-            if (!result.success) {
-                // Note: There are no error codes
-                result.comment = "failed"
-            } else {
-                result.comment = "ok"
-            }
-            aapsLogger.debug(LTag.PUMP, "deliverTreatment: OK. Success: ${result.success} Asked: ${detailedBolusInfo.insulin} Delivered: ${result.bolusDelivered}")
-            result
+        aapsLogger.debug(LTag.PUMP, "deliverTreatment: Delivering bolus: " + detailedBolusInfo.insulin + "U")
+        val t = EventOverviewBolusProgress.Treatment(0.0, 0, detailedBolusInfo.bolusType == DetailedBolusInfo.BolusType.SMB, detailedBolusInfo.id)
+        val connectionOK = medtrumService?.setBolus(detailedBolusInfo, t) ?: false
+        val result = PumpEnactResult(injector)
+        result.success = connectionOK && abs(detailedBolusInfo.insulin - t.insulin) < pumpDescription.bolusStep
+        result.bolusDelivered = t.insulin
+        if (!result.success) {
+            // Note: There are no error codes
+            result.comment = "failed"
         } else {
-            aapsLogger.debug(LTag.PUMP, "deliverTreatment: Invalid input")
-            val result = PumpEnactResult(injector)
-            result.success = false
-            result.bolusDelivered = 0.0
-            result.comment = rh.gs(app.aaps.core.ui.R.string.invalid_input)
-            aapsLogger.error("deliverTreatment: Invalid input")
-            result
+            result.comment = "ok"
         }
+        aapsLogger.debug(LTag.PUMP, "deliverTreatment: OK. Success: ${result.success} Asked: ${detailedBolusInfo.insulin} Delivered: ${result.bolusDelivered}")
+        return result
     }
 
     override fun stopBolusDelivering() {

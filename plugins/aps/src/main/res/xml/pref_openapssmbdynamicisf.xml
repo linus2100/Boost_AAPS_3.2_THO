@@ -36,6 +36,17 @@
             validate:testType="floatNumericRange" />
 
         <app.aaps.core.validators.ValidatingEditTextPreference
+            android:defaultValue="100"
+            android:enabled="true"
+            android:dialogMessage="@string/DynISFAdjust_summary"
+            android:inputType="numberDecimal"
+            android:key="@string/key_DynISFAdjust"
+            android:title="@string/DynISFAdjust_title"
+            validate:floatmaxNumber="300"
+            validate:floatminNumber="1"
+            validate:testType="floatNumericRange" />
+
+        <app.aaps.core.validators.ValidatingEditTextPreference
             android:defaultValue="65"
             android:inputType="numberDecimal"
             android:dialogMessage="@string/lgs_threshold_summary"
@@ -44,6 +55,26 @@
             validate:floatmaxNumber="120"
             validate:floatminNumber="65"
             validate:testType="bgRange" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/key_adjust_sensitivity"
+            android:summary="@string/dynisf_adjust_sensitivity_summary"
+            android:title="@string/dynisf_adjust_sensitivity" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:dependency="@string/key_adjust_sensitivity"
+            android:key="@string/key_sensitivity_raises_target"
+            android:summary="@string/sensitivity_raises_target_summary"
+            android:title="@string/sensitivity_raises_target_title" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:dependency="@string/key_adjust_sensitivity"
+            android:key="@string/key_resistance_lowers_target"
+            android:summary="@string/resistance_lowers_target_summary"
+            android:title="@string/resistance_lowers_target_title" />
 
         <SwitchPreference
             android:defaultValue="false"

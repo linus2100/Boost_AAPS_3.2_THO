@@ -41,6 +41,7 @@
     <string name="description_ns_client_v3">Synchronizes your data with Nightscout using v3 API</string>
     <string name="blocked_by_charging">Blocked by charging options</string>
     <string name="blocked_by_connectivity">Blocked by connectivity options</string>
+    <string name="no_connectivity">No connectivity</string>
     <string name="unsupported_ns_version">Unsupported version of Nightscout</string>
     <string name="openaps_short">OAPS</string>
     <string name="uploader_short">UPLD</string>
@@ -179,9 +180,9 @@
 
 
     <!--    DataBroadcast-->
-    <string name="data_broadcaster">Data Broadcaster</string>
-    <string name="data_broadcaster_short">DBRO</string>
-    <string name="data_broadcaster_description">Broadcast data to Garmin\'s G-Watch Wear App</string>
+    <string name="tizen">Samsung Tizen</string>
+    <string name="tizen_short">TIZ</string>
+    <string name="tizen_description">Broadcast data to Samsung\'s G-Watch Wear App (Tizen OS)</string>
 
     <!-- GarminPlugin -->
     <string name="garmin">Garmin</string>

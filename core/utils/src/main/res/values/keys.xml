@@ -169,6 +169,7 @@
     <string name="key_used_autosens_on_main_phone" translatable="false">used_autosens_on_main_phone</string>
     <string name="key_Boost_settings" translatable="false">Boost_settings</string>
     <string name="key_engineering_mode" translatable="false">engineering_mode</string>
+    <string name="key_openapsma_max_basal" translatable="false">openapsma_max_basal</string>
 
     <string name="key_dynamic_isf_enable" translatable="false">dynamic_isf_enable</string>
     <string name="key_dynamic_isf_use_tdd" translatable="false">dynamic_isf_use_tdd</string>

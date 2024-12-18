@@ -171,6 +171,8 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
     rT.reason = "              ";
 
     var boostActive = profile.boostActive;
+    var profileSwitch = profile.profileSwitch;
+    console.error("Profile % "+profileSwitch+"; ");
 
     if (currentTime) {
         deliverAt = new Date(currentTime);
@@ -273,6 +275,8 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
     console.error("---------------------------------------------------------");
 
     console.error("Current Profile percent: "+profile.profileSwitch+"; ");
+
+
 
     var insulinPeak = profile.insulinPeak;
     var ins_val = profile.insulinDivisor;
@@ -633,7 +637,7 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
     // use autosens-adjusted sens to counteract autosens meal insulin dosing adjustments so that
     // autotuned CR is still in effect even when basals and ISF are being adjusted by TT or autosens
     // this avoids overdosing insulin for large meals when low temp targets are active
-    csf = sens / profile.carb_ratio;
+    csf = profile.sens / profile.carb_ratio;
     console.error("profile.sens:",profile.sens,"sens:",sens,"CSF:",csf);
 
     var maxCarbAbsorptionRate = 30; // g/h; maximum rate to assume carbs will absorb if no CI observed
@@ -1323,8 +1327,8 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
                 var bg_adjust = bga / 40;
 
                 if(profile.enableBoostPercentScale === true){
-                    var scale_pct = round ( 100 / profile.boost_percent_scale ,3 );
-                    console.error("Percent Scale is:"+scale_pct+"; ");
+                    var scale_pct = round ( 100 / ( profile.boost_percent_scale * ( profileSwitch / 100 )) ,3 );
+                    console.error("Percent Scale is:"+(100/scale_pct)+" from "+(profile.boost_percent_scale)+"; ");
 
                 //console.error("bg_adjust value is "+bg_adjust+"; ");
                 //var insulinDivisor = insulinReqPCT - Math.min((insulinPCTsubtract * bg_adjust),0.)
@@ -1378,7 +1382,8 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
                 console.error("Max automated bolus is "+boost_max+"; ");
                 console.error("            ");
 
-                var boost_scale = profile.boost_scale;
+                var boost_scale = ( profile.boost_scale * ( profileSwitch / 100 ));
+                console.error("Boost Scale value is "+boost_scale+" from "+profile.boost_scale+"; ");
                 //var boostInsulinReq = ((TDD * 0.4) / 24 );
                 var boostInsulinReq = basal;
 

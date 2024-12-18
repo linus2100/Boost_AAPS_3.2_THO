@@ -35,7 +35,8 @@
     <string name="key_openapsama_smb_max_range_extension" translatable="false">openapsama_smb_max_range_extension</string>
     <string name="key_a52_risk_enable" translatable="false">a52_risk_enable</string>
 
-    <string name="dynisf_adjust_sensitivity">Adjust sensitivity and BG</string>
+    <string name="dynisf_adjust_sensitivity">Enable TDD based sensitivity ratio for basal and glucose target modification</string>
+    <string name="dynisf_adjust_sensitivity_summary">Uses the last 24h TDD/7D TDD to calculate sensitivity ratio used for increasing or decreasing basal rate, and also adjust glucose target if these options are enabled, in the same way Autosens does. It is recommended to start with this option turned off</string>
     <string name="DynISF_variant" formatted="false">Variant</string>]
     <string name="DynISFUseTDD" translatable="false">Use TDD-based ISF</string>
     <string name="DynISFAdjust_title" formatted="false">DynamicISF Adjustment Factor %</string>
@@ -339,5 +340,6 @@
     <string name="activity_pct_inc_summary">Default value: 80\nProfile percentage decrease when activity detected.</string>
     <string name="activity_pct_inc_title">Activity profile percent decrease</string>
     <string name="activity_pct_inc">Profile percent decrease for activity</string>
+
 
 </resources>

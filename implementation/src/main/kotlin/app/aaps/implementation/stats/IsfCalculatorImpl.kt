@@ -90,8 +90,7 @@ class IsfCalculatorImpl @Inject constructor(
                         val tddWeightedFromLast8H = ((1.6 * tddLast4H) + (0.4 * tddLast8to4H)) * 3 // andere Faktoren
 
                         var tdd =
-                            if ((tddWeightedFromLast8H < (0.20 * tdd7D)) && (tdd1D != null)) ((tddWeightedFromLast8H +( (tddWeightedFromLast8H / tdd7D) * ( tdd7D - tddWeightedFromLast8H))) * 0.45 )
-                        + (tdd1D * 0.10) + (tddWeightedFromLast8H * 0.45) // andere Faktoren !
+                            if ((tddWeightedFromLast8H < (0.20 * tdd7D)) && (tdd1D != null)) ((tddWeightedFromLast8H +( (tddWeightedFromLast8H / tdd7D) * ( tdd7D - tddWeightedFromLast8H))) * 0.45 ) + (tdd1D * 0.10) + (tddWeightedFromLast8H * 0.45) // andere Faktoren !
                             else if (tdd1D != null) (tddWeightedFromLast8H * 0.80) + (tdd1D * 0.10) + (tddLast24H * 0.10) // andere Faktoren ! & tddLast24H
                             else tddWeightedFromLast8H
 
